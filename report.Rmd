@@ -1,0 +1,79 @@
+---
+title: "Laufen in Deutschland"
+author: "Georg Vogelhuber"
+date: "23. Januar 2016"
+output: pdf_document
+---
+
+```{r, echo=FALSE}
+library(dplyr)
+library(lubridate)
+
+load("data.Rdata")
+
+df %>%
+  tbl_df %>%
+  mutate(V5 = gsub("\n","",V5)) %>%
+  rename(GENDER = V1,
+         TIME = V2,
+         BIRTH = V3,
+         EVENT = V4,
+         DATE = V5,
+         RUNNER = V6,
+         DISTANCE = V7) %>%
+  select(-V8) %>%
+  mutate(TIME = hour(hms(TIME))*3600+minute(hms(TIME))*60+second(hms(TIME)),
+         DATE = dmy(DATE),
+         BIRTH = as.numeric(as.character(BIRTH))) -> df
+
+  levels(df$DISTANCE) = c("10", "21.1", "42.195")
+  
+  df %>% 
+    mutate(DISTANCE = as.numeric(as.character(DISTANCE))) -> df
+```
+
+# Daten vor der Bereinigung
+
+```{r}
+summary(df)
+```
+
+```{r}
+length(unique(df$RUNNER))
+```
+
+```{r}
+length(unique(df$DATE))
+```
+
+```{r}
+length(unique(df$EVENT))
+```
+
+```{r}
+dim(df)
+```
+
+# Filtern nach ungültigem Geburtsdatum
+```{r}
+df %>% 
+    filter(BIRTH> 1930, BIRTH<2008) -> df
+```
+
+
+```{r}
+dim(df)
+```
+
+# Filtern nach Läufen mit wenig Teilnehmern
+```{r}
+table(df$EVENT) %>% data.frame %>% filter(Freq >= 20) -> to.keep
+  
+df %>% 
+    filter(EVENT %in% to.keep$Var1) -> df
+```
+
+
+```{r}
+dim(df)
+```
